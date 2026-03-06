@@ -52,7 +52,7 @@ function JoinScreen() {
     if (!isMounted) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
     if (!poll) return null;
 
-    const handleVote = () => {
+    const handleVote = async () => {
         if (!selected || voted) return;
 
         // Attempt to send vote via PeerJS (works cross-device).
@@ -64,6 +64,18 @@ function JoinScreen() {
         // same browser share the same state — the host tab will see the update instantly.
         addVote(selected);
         setVoted(true);
+
+        // Also send to the global API relay for production environments
+        // where PeerJS fails and localStorage is on different devices.
+        try {
+            await fetch('/api/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hostId: peerId, choiceId: selected })
+            });
+        } catch (error) {
+            console.error("Failed to relay vote via API", error);
+        }
     };
 
     return (

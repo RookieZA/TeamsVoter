@@ -22,29 +22,39 @@ export function usePeer(customId?: string, onVote?: (payload: VotePayload, peerI
     useEffect(() => {
         if (typeof window !== "undefined") {
             import("peerjs").then(({ default: Peer }) => {
-                const id = customId || `poll-${Math.random().toString(36).substring(2, 9)}`;
-                const peer = new Peer(id);
+                try {
+                    const id = customId || `poll-${Math.random().toString(36).substring(2, 9)}`;
+                    const peer = new Peer(id);
 
-                peer.on("open", (id) => {
-                    setPeerId(id);
-                });
-
-                peer.on("connection", (conn) => {
-                    setConnections((prev) => [...prev, conn]);
-
-                    conn.on("data", (data) => {
-                        const payload = data as VotePayload;
-                        if (payload.type === "VOTE" && onVoteRef.current) {
-                            onVoteRef.current(payload, conn.peer);
-                        }
+                    peer.on("open", (id) => {
+                        setPeerId(id);
                     });
 
-                    conn.on("close", () => {
-                        setConnections((prev) => prev.filter((c) => c.peer !== conn.peer));
-                    });
-                });
+                    peer.on("connection", (conn) => {
+                        setConnections((prev) => [...prev, conn]);
 
-                peerInstance.current = peer;
+                        conn.on("data", (data) => {
+                            const payload = data as VotePayload;
+                            if (payload.type === "VOTE" && onVoteRef.current) {
+                                onVoteRef.current(payload, conn.peer);
+                            }
+                        });
+
+                        conn.on("close", () => {
+                            setConnections((prev) => prev.filter((c) => c.peer !== conn.peer));
+                        });
+                    });
+
+                    peer.on("error", (err) => {
+                        console.error("Host Peer error:", err);
+                    });
+
+                    peerInstance.current = peer;
+                } catch (error) {
+                    console.error("Failed to initialize Host Peer:", error);
+                }
+            }).catch(err => {
+                console.error("Failed to load peerjs:", err);
             });
         }
 

@@ -42,6 +42,46 @@ export default function HostDashboard() {
         }
     }, [isMounted, storedHostId, hostId, router]);
 
+    // Poll API route as a fallback for production environments
+    useEffect(() => {
+        if (!isMounted || storedHostId !== hostId) return;
+
+        const syncVotes = async () => {
+            try {
+                const res = await fetch(`/api/vote?hostId=${hostId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.votes) {
+                        // We use the raw store state to compare and update
+                        const currentChoices = usePollStore.getState().choices;
+                        let updated = false;
+
+                        const newChoices = currentChoices.map(c => {
+                            const apiVotes = data.votes[c.id] || 0;
+                            // Only update if the API has more votes than our local state
+                            if (apiVotes > c.votes) {
+                                updated = true;
+                                return { ...c, votes: apiVotes };
+                            }
+                            return c;
+                        });
+
+                        if (updated) {
+                            usePollStore.setState({ choices: newChoices });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to sync votes from API", error);
+            }
+        };
+
+        const interval = setInterval(syncVotes, 3000); // Poll every 3 seconds
+        syncVotes(); // Initial sync
+
+        return () => clearInterval(interval);
+    }, [isMounted, storedHostId, hostId]);
+
     const { connections, peerId } = usePeer(hostId, (payload, peerId) => {
         if (payload.type === "VOTE") {
             addVote(payload.choiceId);

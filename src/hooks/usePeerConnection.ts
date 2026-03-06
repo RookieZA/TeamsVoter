@@ -16,62 +16,75 @@ export function usePeerConnection(hostId: string) {
         let pollInterval: ReturnType<typeof setInterval> | null = null;
 
         import("peerjs").then(({ default: Peer }) => {
-            const peer = new Peer();
+            try {
+                const peer = new Peer();
 
-            peer.on("open", () => {
-                const conn = peer.connect(hostId, { reliable: true });
-                connInstance.current = conn;
+                peer.on("open", () => {
+                    try {
+                        const conn = peer.connect(hostId, { reliable: true });
+                        connInstance.current = conn;
 
-                // Primary path: listen for the open event
-                conn.on("open", () => {
-                    if (!isConnectedRef.current) {
-                        isConnectedRef.current = true;
-                        setStatus("connected");
-                    }
-                    if (pollInterval) {
-                        clearInterval(pollInterval);
-                        pollInterval = null;
+                        // Primary path: listen for the open event
+                        conn.on("open", () => {
+                            if (!isConnectedRef.current) {
+                                isConnectedRef.current = true;
+                                setStatus("connected");
+                            }
+                            if (pollInterval) {
+                                clearInterval(pollInterval);
+                                pollInterval = null;
+                            }
+                        });
+
+                        // Fallback: poll conn.open every 100ms.
+                        // PeerJS has a known bug where the 'open' event does not fire
+                        // when both peers are in the same browser context.
+                        pollInterval = setInterval(() => {
+                            if (conn.open && !isConnectedRef.current) {
+                                isConnectedRef.current = true;
+                                setStatus("connected");
+                                clearInterval(pollInterval!);
+                                pollInterval = null;
+                            }
+                        }, 100);
+
+                        conn.on("close", () => {
+                            isConnectedRef.current = false;
+                            setStatus("disconnected");
+                            if (pollInterval) {
+                                clearInterval(pollInterval);
+                                pollInterval = null;
+                            }
+                        });
+
+                        conn.on("error", (err) => {
+                            console.error("Connection error:", err);
+                            isConnectedRef.current = false;
+                            setStatus("error");
+                            if (pollInterval) {
+                                clearInterval(pollInterval);
+                                pollInterval = null;
+                            }
+                        });
+                    } catch (err) {
+                        console.error("Failed to connect to host:", err);
+                        setStatus("error");
                     }
                 });
 
-                // Fallback: poll conn.open every 100ms.
-                // PeerJS has a known bug where the 'open' event does not fire
-                // when both peers are in the same browser context.
-                pollInterval = setInterval(() => {
-                    if (conn.open && !isConnectedRef.current) {
-                        isConnectedRef.current = true;
-                        setStatus("connected");
-                        clearInterval(pollInterval!);
-                        pollInterval = null;
-                    }
-                }, 100);
-
-                conn.on("close", () => {
-                    isConnectedRef.current = false;
-                    setStatus("disconnected");
-                    if (pollInterval) {
-                        clearInterval(pollInterval);
-                        pollInterval = null;
-                    }
-                });
-
-                conn.on("error", (err) => {
-                    console.error("Connection error:", err);
-                    isConnectedRef.current = false;
+                peer.on("error", (err) => {
+                    console.error("Peer error:", err);
                     setStatus("error");
-                    if (pollInterval) {
-                        clearInterval(pollInterval);
-                        pollInterval = null;
-                    }
                 });
-            });
 
-            peer.on("error", (err) => {
-                console.error("Peer error:", err);
+                peerInstance.current = peer;
+            } catch (err) {
+                console.error("Failed to initialize Peer:", err);
                 setStatus("error");
-            });
-
-            peerInstance.current = peer;
+            }
+        }).catch(err => {
+            console.error("Failed to load peerjs module:", err);
+            setStatus("error");
         });
 
         return () => {
