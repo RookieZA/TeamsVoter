@@ -29,6 +29,7 @@
 - 🔗 **Auto-Generating Join Links**: Includes encoded poll data inside the join URL, so participants instantly see the question and choices without an initial server roundtrip.
 - 🎨 **Interactive UI**: Built with `framer-motion` for smooth percentage bar animations and `lucide-react` for beautiful iconography.
 - 💅 **Modern Styling**: Styled with Tailwind CSS v4 and `clsx` / `tailwind-merge` for robust utility class management.
+- 🌈 **Colour Scheme Switcher**: Choose from four built-in themes — **Light** (default), **Midnight**, **Vivid** (orange/purple), and **Ocean** (teal/emerald). Selection is persisted in `localStorage` and applied globally via a floating palette button.
 
 ## 🛠️ Tech Stack
 
@@ -49,6 +50,9 @@
 - `src/hooks/usePeer.ts`: Custom hook for the host to initialize a PeerJS instance and listen for incoming vote payloads.
 - `src/hooks/usePeerConnection.ts`: Custom hook for participants to connect to the host's PeerJS instance and send votes.
 - `src/lib/store.ts`: Zustand store for state management, including `localStorage` persistence and cross-tab synchronization.
+- `src/lib/themeContext.tsx`: Theme context providing the active theme, `setTheme`, and the list of available themes.
+- `src/app/components/ThemeSwitcher.tsx`: Floating palette UI component for switching colour schemes.
+- `src/app/components/ClientProviders.tsx`: Client-side wrapper that injects the theme provider and switcher into the server layout.
 
 ## 🚀 Getting Started
 
