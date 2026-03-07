@@ -26,13 +26,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {process.env.NEXT_PUBLIC_TRACKING_SCRIPT && (
-          <div dangerouslySetInnerHTML={{ __html: process.env.NEXT_PUBLIC_TRACKING_SCRIPT }} />
-        )}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {process.env.NEXT_PUBLIC_TRACKING_SCRIPT && (
+          <div dangerouslySetInnerHTML={{ __html: process.env.NEXT_PUBLIC_TRACKING_SCRIPT }} />
+        )}
         {children}
       </body>
     </html>
