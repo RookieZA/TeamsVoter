@@ -95,12 +95,12 @@ export function usePeerConnection(hostId: string) {
         };
     }, [hostId]);
 
-    const sendVote = useCallback((choiceId: string): boolean => {
+    const sendVote = useCallback((choiceId: string, voterId: string): boolean => {
         const conn = connInstance.current;
         // Optimistically send if conn.open is true, even if the 'open' event hasn't fired yet.
         // This helps in cases where the event is delayed or doesn't fire due to the PeerJS bug.
         if (conn && (isConnectedRef.current || conn.open)) {
-            conn.send({ type: "VOTE", choiceId } as VotePayload);
+            conn.send({ type: "VOTE", choiceId, voterId } as VotePayload);
             return true;
         }
         return false;

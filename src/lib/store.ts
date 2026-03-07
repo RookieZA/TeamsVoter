@@ -11,28 +11,40 @@ export interface PollState {
     hostId: string | null;
     question: string;
     choices: Choice[];
+    votedUsers: string[]; // Track which users have already voted
     setPoll: (hostId: string, question: string, choices: { id: string; label: string }[]) => void;
-    addVote: (choiceId: string) => void;
+    addVote: (choiceId: string, voterId?: string) => void;
     resetPoll: () => void;
 }
 
 export const usePollStore = create<PollState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             hostId: null,
             question: "",
             choices: [],
+            votedUsers: [],
             setPoll: (hostId, question, newChoices) => set({
                 hostId,
                 question,
                 choices: newChoices.map(c => ({ ...c, votes: 0 })),
+                votedUsers: []
             }),
-            addVote: (choiceId) => set((state) => ({
-                choices: state.choices.map((c) =>
-                    c.id === choiceId ? { ...c, votes: c.votes + 1 } : c
-                )
-            })),
-            resetPoll: () => set({ hostId: null, question: "", choices: [] }),
+            addVote: (choiceId, voterId) => {
+                const state = get();
+                // If a voterId is provided and they already voted, ignore the vote
+                if (voterId && state.votedUsers.includes(voterId)) {
+                    return;
+                }
+
+                set({
+                    choices: state.choices.map((c) =>
+                        c.id === choiceId ? { ...c, votes: c.votes + 1 } : c
+                    ),
+                    votedUsers: voterId ? [...state.votedUsers, voterId] : state.votedUsers
+                });
+            },
+            resetPoll: () => set({ hostId: null, question: "", choices: [], votedUsers: [] }),
         }),
         {
             name: 'poll-storage',

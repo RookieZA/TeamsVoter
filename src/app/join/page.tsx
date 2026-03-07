@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { decodeData } from "@/lib/utils";
+import { decodeData, getOrCreateVoterId } from "@/lib/utils";
 import { usePeerConnection } from "@/hooks/usePeerConnection";
 import { usePollStore } from "@/lib/store";
 import { CheckCircle2, AlertTriangle, Loader2, Send } from "lucide-react";
@@ -55,14 +55,16 @@ function JoinScreen() {
     const handleVote = async () => {
         if (!selected || voted) return;
 
+        const voterId = getOrCreateVoterId();
+
         // Attempt to send vote via PeerJS (works cross-device).
         // This may fail silently if PeerJS can't connect in same-browser scenarios.
-        sendVote(selected);
+        sendVote(selected, voterId);
 
         // Always update the shared Zustand store directly as a reliable fallback.
         // Since usePollStore uses zustand-persist (localStorage), all tabs in the
         // same browser share the same state — the host tab will see the update instantly.
-        addVote(selected);
+        addVote(selected, voterId);
         setVoted(true);
 
         // Also send to the global API relay for production environments
@@ -71,7 +73,7 @@ function JoinScreen() {
             await fetch('/api/vote', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ hostId: peerId, choiceId: selected })
+                body: JSON.stringify({ hostId: peerId, choiceId: selected, voterId })
             });
         } catch (error) {
             console.error("Failed to relay vote via API", error);

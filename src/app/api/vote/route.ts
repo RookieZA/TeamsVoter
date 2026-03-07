@@ -1,48 +1,114 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
-// In a real production app, this would be a Redis or Database.
-// Since this app runs as a single Docker container, we can use a global in-memory store
-// to relay votes between the join screen and the host screen.
+
+// Zod Schemas for Validation
+const choiceIdSchema = z.string().min(1).max(100);
+const hostIdSchema = z.string().min(1).max(100);
+const voterIdSchema = z.string().min(1).max(100);
+
+const votePostSchema = z.object({
+    hostId: hostIdSchema,
+    choiceId: choiceIdSchema,
+    voterId: voterIdSchema,
+});
+
+const voteGetSchema = z.object({
+    hostId: hostIdSchema,
+});
+
+// Global store using nested Maps to prevent Prototype Pollution
+// Map<hostId, { votes: Map<choiceId, count>, voters: Set<voterId> }>
 const globalAny = global as any;
 if (!globalAny.votesStore) {
-    globalAny.votesStore = new Map<string, Record<string, number>>();
+    globalAny.votesStore = new Map<string, { votes: Map<string, number>, voters: Set<string> }>();
 }
-const store: Map<string, Record<string, number>> = globalAny.votesStore;
+const store: Map<string, { votes: Map<string, number>, voters: Set<string> }> = globalAny.votesStore;
+
+// Basic Rate Limiting Store
+if (!globalAny.rateLimitStore) {
+    globalAny.rateLimitStore = new Map<string, { count: number, resetAt: number }>();
+}
+const rateLimitStore: Map<string, { count: number, resetAt: number }> = globalAny.rateLimitStore;
+
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 30; // 30 votes per minute per IP
+
+function isRateLimited(ip: string): boolean {
+    const now = Date.now();
+    const record = rateLimitStore.get(ip);
+
+    if (!record || record.resetAt < now) {
+        // Create new record or reset expired one
+        rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+        return false;
+    }
+
+    if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+        return true;
+    }
+
+    // Increment count
+    record.count++;
+    return false;
+}
 
 export async function POST(request: Request) {
     try {
-        const { hostId, choiceId } = await request.json();
-
-        if (!hostId || !choiceId) {
-            return NextResponse.json({ error: 'Missing hostId or choiceId' }, { status: 400 });
+        const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+        if (ip !== 'unknown' && isRateLimited(ip)) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
         }
+
+        const body = await request.json();
+        const parsed = votePostSchema.safeParse(body);
+
+        if (!parsed.success) {
+            return NextResponse.json({ error: 'Invalid payload format' }, { status: 400 });
+        }
+
+        const { hostId, choiceId, voterId } = parsed.data;
 
         // Initialize host poll if it doesn't exist
         if (!store.has(hostId)) {
-            store.set(hostId, {});
+            store.set(hostId, { votes: new Map<string, number>(), voters: new Set<string>() });
         }
 
-        const pollVotes = store.get(hostId)!;
+        const pollData = store.get(hostId)!;
 
-        // Increment the vote count for this choice
-        pollVotes[choiceId] = (pollVotes[choiceId] || 0) + 1;
+        // Check if this voter has already voted
+        if (pollData.voters.has(voterId)) {
+            return NextResponse.json({ error: 'Already voted' }, { status: 409 });
+        }
 
-        return NextResponse.json({ success: true, votes: pollVotes });
+        // Record the vote and the voter
+        pollData.voters.add(voterId);
+        const currentCount = pollData.votes.get(choiceId) || 0;
+        pollData.votes.set(choiceId, currentCount + 1);
+
+        // Convert Map to plain object for JSON response
+        const votesObj = Object.fromEntries(pollData.votes);
+        return NextResponse.json({ success: true, votes: votesObj });
     } catch (error) {
-        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 }
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const hostId = searchParams.get('hostId');
+    const hostIdParam = searchParams.get('hostId');
 
-    if (!hostId) {
-        return NextResponse.json({ error: 'Missing hostId' }, { status: 400 });
+    const parsed = voteGetSchema.safeParse({ hostId: hostIdParam });
+
+    if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid or missing hostId' }, { status: 400 });
     }
 
-    const pollVotes = store.get(hostId) || {};
+    const { hostId } = parsed.data;
 
-    return NextResponse.json({ votes: pollVotes });
+    const pollData = store.get(hostId);
+    const votesObj = pollData ? Object.fromEntries(pollData.votes) : {};
+
+    return NextResponse.json({ votes: votesObj });
 }

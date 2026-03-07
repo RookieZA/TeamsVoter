@@ -2,11 +2,20 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { DataConnection, Peer } from "peerjs";
+import { z } from "zod";
 
 export type VotePayload = {
     type: "VOTE";
     choiceId: string;
+    voterId: string;
 };
+
+// Zod Schema to validate incoming P2P payloads
+const votePayloadSchema = z.object({
+    type: z.literal("VOTE"),
+    choiceId: z.string().min(1).max(100),
+    voterId: z.string().min(1).max(100)
+});
 
 export function usePeer(customId?: string, onVote?: (payload: VotePayload, peerId: string) => void) {
     const [peerId, setPeerId] = useState<string | null>(null);
@@ -34,9 +43,12 @@ export function usePeer(customId?: string, onVote?: (payload: VotePayload, peerI
                         setConnections((prev) => [...prev, conn]);
 
                         conn.on("data", (data) => {
-                            const payload = data as VotePayload;
-                            if (payload.type === "VOTE" && onVoteRef.current) {
-                                onVoteRef.current(payload, conn.peer);
+                            // Validate the incoming data from other peers using Zod
+                            const parsed = votePayloadSchema.safeParse(data);
+                            if (parsed.success && onVoteRef.current) {
+                                onVoteRef.current(parsed.data, conn.peer);
+                            } else if (!parsed.success) {
+                                console.warn("Received invalid P2P payload format", parsed.error);
                             }
                         });
 
