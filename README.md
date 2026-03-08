@@ -43,7 +43,7 @@ You can configure additional integrations by creating a `.env` or `.env.local` f
 |----------|-------------|---------|
 | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | The domain used for Plausible Analytics. | `votify.example.com` |
 | `NEXT_PUBLIC_PLAUSIBLE_URL` | The URL to your Plausible script. | `https://plausible.io/js/script.js` |
-| `NEXT_PUBLIC_BUYMEACOFFEE_SLUG` | Your creator slug for the "Buy Me A Coffee" widget. If provided, a floating button will appear on the bottom left. | `ryancoe` |
+| `NEXT_PUBLIC_BUYMEACOFFEE_SLUG` | Your creator slug for the "Buy Me A Coffee" widget. If provided, a floating button will appear on the bottom left. | `RookieZA` |
 
 ## 🎨 Colour Themes
 
