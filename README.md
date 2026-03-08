@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="./assets/hero_banner.png" alt="TeamsVoter Hero Banner" width="100%" />
+  <img src="./assets/hero_banner.png" alt="Votify Hero Banner" width="100%" />
 
-  # TeamsVoter (LivePoll)
+  # Votify (LivePoll)
 
   **A real-time, peer-to-peer polling application** built with modern web technologies. Create polls, share join links, and vote in real-time without relying on a central database or WebSocket server!
 
@@ -18,10 +18,10 @@
 ## 📸 See it in Action
 
 <p align="center">
-  <img src="./assets/host_qna.png" alt="TeamsVoter Host Q&A Dashboard" width="800" />
+  <img src="./assets/host_qna.png" alt="Votify Host Q&A Dashboard" width="800" />
 </p>
 <p align="center">
-  <img src="./assets/join_page.png" alt="TeamsVoter Participant View" width="400" />
+  <img src="./assets/join_page.png" alt="Votify Participant View" width="400" />
 </p>
 
 ## ✨ Features
@@ -37,7 +37,7 @@
 
 ## 🎨 Colour Themes
 
-TeamsVoter ships with four built-in colour schemes. A floating **palette button** (bottom-right corner) lets you switch themes at any time — your selection is saved in `localStorage` so it persists across sessions.
+Votify ships with four built-in colour schemes. A floating **palette button** (bottom-right corner) lets you switch themes at any time — your selection is saved in `localStorage` so it persists across sessions.
 
 | Theme | Accent colours | Description |
 |-------|---------------|-------------|
@@ -86,8 +86,8 @@ The active theme is applied as a `data-theme` attribute on `<html>` (e.g. `data-
 
 1. **Clone the repository and navigate to the project directory:**
    ```bash
-   git clone https://github.com/RookieZA/TeamsVoter
-   cd TeamsVoter
+   git clone https://github.com/RookieZA/Votify
+   cd Votify
    ```
 
 2. **Install the dependencies:**

@@ -62,7 +62,7 @@ export default function Home() {
           <div className="mx-auto w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary/10">
             <BarChart2 className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">TeamsVoter</h1>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Votify</h1>
           <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
             Create real-time, peer-to-peer engagement sessions instantly. No database or sign-up required.
           </p>

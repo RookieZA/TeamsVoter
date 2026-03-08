@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LivePoll by TeamsVoter",
+  title: "LivePoll by Votify",
   description: "Real-time, stateless P2P polling system",
 };
 
