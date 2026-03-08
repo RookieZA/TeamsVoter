@@ -3,11 +3,11 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { motion } from "framer-motion";
 import { Users, Copy, CheckCircle2, AlertTriangle } from "lucide-react";
 import { usePollStore } from "@/lib/store";
 import { usePeer } from "@/hooks/usePeer";
 import { encodeData } from "@/lib/utils";
+import PieChart from "@/app/components/PieChart";
 
 export default function HostDashboard() {
     const params = useParams();
@@ -161,29 +161,8 @@ export default function HostDashboard() {
                 <div className="lg:col-span-2 space-y-6">
                     <div className="glass rounded-2xl p-8">
                         <h1 className="text-3xl font-bold mb-2">{question}</h1>
-                        <p className="text-foreground/60 mb-8">{totalVotes} Total Votes</p>
-
-                        <div className="space-y-6">
-                            {choices.map((choice) => {
-                                const percentage = totalVotes === 0 ? 0 : Math.round((choice.votes / totalVotes) * 100);
-                                return (
-                                    <div key={choice.id} className="relative">
-                                        <div className="flex justify-between mb-2 text-sm font-medium">
-                                            <span>{choice.label}</span>
-                                            <span>{percentage}% ({choice.votes})</span>
-                                        </div>
-                                        <div className="w-full h-4 bg-background/50 rounded-full overflow-hidden">
-                                            <motion.div
-                                                className="h-full bg-primary"
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${percentage}%` }}
-                                                transition={{ duration: 0.5, ease: "easeOut" }}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                        <p className="text-foreground/60 mb-6">{totalVotes} Total Vote{totalVotes !== 1 ? 's' : ''}</p>
+                        <PieChart choices={choices} />
                     </div>
                 </div>
 

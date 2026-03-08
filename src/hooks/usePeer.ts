@@ -29,17 +29,24 @@ export function usePeer(customId?: string, onVote?: (payload: VotePayload, peerI
     }, [onVote]);
 
     useEffect(() => {
+        let isMounted = true;
         if (typeof window !== "undefined") {
             import("peerjs").then(({ default: Peer }) => {
+                if (!isMounted) return;
                 try {
                     const id = customId || `poll-${Math.random().toString(36).substring(2, 9)}`;
                     const peer = new Peer(id);
 
                     peer.on("open", (id) => {
+                        if (!isMounted) {
+                            peer.destroy();
+                            return;
+                        }
                         setPeerId(id);
                     });
 
                     peer.on("connection", (conn) => {
+                        if (!isMounted) return;
                         setConnections((prev) => [...prev, conn]);
 
                         conn.on("data", (data) => {
@@ -71,6 +78,7 @@ export function usePeer(customId?: string, onVote?: (payload: VotePayload, peerI
         }
 
         return () => {
+            isMounted = false;
             if (peerInstance.current) {
                 peerInstance.current.destroy();
             }
