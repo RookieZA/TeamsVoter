@@ -41,19 +41,19 @@ export default function RootLayout({
         )}
         {process.env.NEXT_PUBLIC_BUYMEACOFFEE_SLUG && (
           <div className="fixed bottom-4 left-4 z-50">
-            <Script
-              src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
-              data-name="bmc-button"
-              data-slug={process.env.NEXT_PUBLIC_BUYMEACOFFEE_SLUG}
-              data-color="#FFDD00"
-              data-emoji="☕"
-              data-font="Cookie"
-              data-text="Buy me a coffee"
-              data-outline-color="#000000"
-              data-font-color="#000000"
-              data-coffee-color="#ffffff"
-              strategy="afterInteractive"
-            />
+            <a
+              href={`https://www.buymeacoffee.com/${process.env.NEXT_PUBLIC_BUYMEACOFFEE_SLUG}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block transition-transform hover:scale-105"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=%E2%98%95&slug=${process.env.NEXT_PUBLIC_BUYMEACOFFEE_SLUG}&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff`}
+                alt="Buy me a coffee"
+                style={{ height: "60px" }}
+              />
+            </a>
           </div>
         )}
         <ClientProviders>{children}</ClientProviders>
