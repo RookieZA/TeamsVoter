@@ -19,13 +19,9 @@
 ## 📸 See it in Action
 
 <p align="center">
-  <img src="./assets/host_qna.png" alt="Votify Host Q&A Dashboard" width="800" />
+  <img src="./assets/host_qna.png" alt="Votify Host Q&A Dashboard" width="49%" />
+  <img src="./assets/join_page.png" alt="Votify Participant View" width="49%" />
 </p>
-<p align="center">
-  <img src="./assets/join_page.png" alt="Votify Participant View" width="400" />
-</p>
-
-> Screenshots above predate the Apple-inspired visual redesign — the live UI now uses the glass/aurora look described below.
 
 ## ✨ Features
 
